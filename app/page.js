@@ -1,65 +1,163 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+
+const LABELS = ['Work', 'Personal', 'Urgent']
+
+const LABEL_COLORS = {
+  Work: 'bg-blue-100 text-blue-600',
+  Personal: 'bg-green-100 text-green-600',
+  Urgent: 'bg-red-100 text-red-600',
+}
 
 export default function Home() {
+  const [input, setInput] = useState('')
+  const [label, setLabel] = useState('Personal')
+  const [dueDate, setDueDate] = useState('')
+  const [todos, setTodos] = useState([])
+  const [filter, setFilter] = useState('All')
+  
+  const [showDate, setShowDate] = useState(false)
+  const [showLabel, setShowLabel] = useState(false)
+
+  const addTodo = () => {
+    if (!input.trim()) return
+    setTodos([...todos, { id: Date.now(), title: input, done: false, label, dueDate }])
+    setInput('')
+    setDueDate('')
+  }
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    ))
+  }
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id))
+  }
+
+  const isOverdue = (todo) => {
+    if (!todo.dueDate || todo.done) return false
+    return new Date(todo.dueDate) < new Date()
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-3xl">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">ToDo List</h1>
+
+        {/* Filter buttons */}
+        <div className="flex gap-2 mb-4">
+          {['All', ...LABELS].map(l => (
+            <button
+              key={l}
+              onClick={() => setFilter(l)}
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                filter === l
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}>
+              {l}
+            </button>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Quick add row */}
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+            placeholder="Add a todo..."
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <button
+            onClick={() => setShowDate(!showDate)}
+            title="Set due date"
+            className={`px-3 py-2 rounded-lg text-sm border ${showDate ? 'bg-gray-100 border-gray-300' : 'border-gray-300 text-gray-400 hover:text-gray-600'
+              }`}>
+            📅
+          </button>
+          <button
+            onClick={() => setShowLabel(!showLabel)}
+            title="Set label"
+            className={`px-3 py-2 rounded-lg text-sm border ${showLabel ? 'bg-gray-100 border-gray-300' : 'border-gray-300 text-gray-400 hover:text-gray-600'
+              }`}>
+            🏷️
+          </button>
+          <button
+            onClick={addTodo}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+            Add
+          </button>
         </div>
-      </main>
-    </div>
-  );
+
+        {(showDate || showLabel) && (
+          <div className="flex gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+            {showDate && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-gray-400">Due date</label>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600"
+                />
+              </div>
+            )}
+            {showLabel && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-gray-400">Label</label>
+                <select
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-600">
+                  {LABELS.map(l => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Todo list */}
+        <ul className="space-y-2">
+          {todos
+            .filter(todo => filter === 'All' || todo.label === filter)
+            .map(todo => (
+              <li key={todo.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={todo.done}
+                  onChange={() => toggleTodo(todo.id)}
+                  className="w-4 h-4 accent-blue-500"
+                />
+                <span className={todo.done ? 'line-through text-gray-400 flex-1' : 'flex-1'}>
+                  {todo.title}
+                </span>
+                {todo.label && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${LABEL_COLORS[todo.label]}`}>
+                    {todo.label}
+                  </span>
+                )}
+                {todo.dueDate && (
+                  <span className={`text-xs ${isOverdue(todo) ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                    📅 {todo.dueDate}
+                  </span>
+                )}
+                <button
+                  onClick={() => deleteTodo(todo.id)}
+                  className="text-red-400 hover:text-red-600 text-xs">
+                  ✕
+                </button>
+              </li>
+            ))}
+        </ul>
+
+      </div>
+    </main>
+  )
 }
